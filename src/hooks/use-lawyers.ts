@@ -1,6 +1,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { Lawyer } from "@/components/lawyer-finder/lawyer-card";
 
 export type LawyerFilters = {
   state?: string;
@@ -47,8 +48,24 @@ export const useLawyers = (filters: LawyerFilters) => {
         throw error;
       }
 
+      // Map Supabase data to Lawyer interface
+      const lawyers: Lawyer[] = data ? data.map(lawyer => ({
+        id: lawyer.id,
+        name: lawyer.name,
+        firm: lawyer.firm,
+        state: lawyer.state,
+        city: lawyer.city,
+        zip: lawyer.zip,
+        phone: lawyer.phone,
+        email: lawyer.email ?? undefined,
+        languages: lawyer.languages,
+        proBono: lawyer.pro_bono ?? false,  // Map pro_bono to proBono
+        specialties: lawyer.specialties,
+        verified: lawyer.verified ?? false
+      })) : [];
+
       return {
-        lawyers: data || [],
+        lawyers,
         totalCount: count || 0,
       };
     },
