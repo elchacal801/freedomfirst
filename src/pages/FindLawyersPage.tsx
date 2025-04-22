@@ -1,5 +1,4 @@
-
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import Navbar from "@/components/ui/navbar";
 import Footer from "@/components/ui/footer";
 import { 
@@ -14,8 +13,8 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Gavel, Search, Map, Filter } from "lucide-react";
-import LawyerCard, { Lawyer } from "@/components/lawyer-finder/lawyer-card";
-import { SAMPLE_LAWYERS, US_STATES, SPECIALTIES, LANGUAGES } from "@/data/lawyer-data";
+import LawyerCard from "@/components/lawyer-finder/lawyer-card";
+import { US_STATES, SPECIALTIES, LANGUAGES } from "@/data/lawyer-data";
 import {
   Sheet,
   SheetContent,
@@ -25,68 +24,23 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
+import { useLawyers } from "@/hooks/use-lawyers";
 
 export default function FindLawyersPage() {
   const [selectedState, setSelectedState] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [proBono, setProBono] = useState<boolean>(false);
-  const [verified, setVerified] = useState<boolean>(false);
   const [selectedSpecialties, setSelectedSpecialties] = useState<string[]>([]);
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
   
-  // Filter lawyers based on criteria
-  const filteredLawyers = useMemo(() => {
-    return SAMPLE_LAWYERS.filter((lawyer) => {
-      // Filter by state
-      if (selectedState && lawyer.state !== selectedState) {
-        return false;
-      }
-      
-      // Filter by search term (name, firm, city)
-      if (searchTerm) {
-        const searchLower = searchTerm.toLowerCase();
-        const nameMatch = lawyer.name.toLowerCase().includes(searchLower);
-        const firmMatch = lawyer.firm.toLowerCase().includes(searchLower);
-        const cityMatch = lawyer.city.toLowerCase().includes(searchLower);
-        if (!(nameMatch || firmMatch || cityMatch)) {
-          return false;
-        }
-      }
-      
-      // Filter by pro bono availability
-      if (proBono && !lawyer.proBono) {
-        return false;
-      }
-      
-      // Filter by verified status
-      if (verified && !lawyer.verified) {
-        return false;
-      }
-      
-      // Filter by specialties
-      if (selectedSpecialties.length > 0) {
-        const hasSpecialty = selectedSpecialties.some(specialty => 
-          lawyer.specialties.includes(specialty)
-        );
-        if (!hasSpecialty) {
-          return false;
-        }
-      }
-      
-      // Filter by languages
-      if (selectedLanguages.length > 0) {
-        const hasLanguage = selectedLanguages.some(language => 
-          lawyer.languages.includes(language)
-        );
-        if (!hasLanguage) {
-          return false;
-        }
-      }
-      
-      return true;
-    });
-  }, [selectedState, searchTerm, proBono, verified, selectedSpecialties, selectedLanguages]);
-  
+  const { data, isLoading, error } = useLawyers({
+    state: selectedState,
+    languages: selectedLanguages,
+    proBono,
+    page: currentPage
+  });
+
   // Toggle specialty selection
   const toggleSpecialty = (specialty: string) => {
     setSelectedSpecialties(prev => 
@@ -110,15 +64,15 @@ export default function FindLawyersPage() {
     setSelectedState("");
     setSearchTerm("");
     setProBono(false);
-    setVerified(false);
     setSelectedSpecialties([]);
     setSelectedLanguages([]);
   };
-
+  
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
       
+      {/* Header */}
       <main className="flex-grow">
         {/* Header */}
         <section className="bg-primary text-primary-foreground py-10 md:py-14">
@@ -181,8 +135,8 @@ export default function FindLawyersPage() {
                 <div className="flex items-center space-x-2">
                   <Checkbox 
                     id="verified" 
-                    checked={verified}
-                    onCheckedChange={(checked) => setVerified(checked as boolean)}
+                    checked={false}
+                    onCheckedChange={(checked) => console.log(checked)}
                   />
                   <Label htmlFor="verified">Verified Only</Label>
                 </div>
@@ -258,7 +212,13 @@ export default function FindLawyersPage() {
         <section className="freedom-container py-10">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold">
-              {filteredLawyers.length} {filteredLawyers.length === 1 ? 'Lawyer' : 'Lawyers'} Found
+              {isLoading ? (
+                "Loading lawyers..."
+              ) : error ? (
+                "Error loading lawyers"
+              ) : (
+                `${data?.totalCount || 0} ${data?.totalCount === 1 ? 'Lawyer' : 'Lawyers'} Found`
+              )}
             </h2>
             <Button variant="outline" className="gap-2">
               <Map className="h-4 w-4" />
@@ -266,7 +226,15 @@ export default function FindLawyersPage() {
             </Button>
           </div>
           
-          {filteredLawyers.length === 0 ? (
+          {isLoading ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">Loading lawyers...</p>
+            </div>
+          ) : error ? (
+            <div className="text-center py-12 text-destructive">
+              <p>Error loading lawyers. Please try again.</p>
+            </div>
+          ) : data?.lawyers.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-muted-foreground text-lg">No lawyers match your current filters.</p>
               <Button variant="outline" onClick={resetFilters} className="mt-4">
@@ -275,7 +243,7 @@ export default function FindLawyersPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredLawyers.map((lawyer) => (
+              {data?.lawyers.map((lawyer) => (
                 <LawyerCard key={lawyer.id} lawyer={lawyer} />
               ))}
             </div>

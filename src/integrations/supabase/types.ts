@@ -9,16 +9,135 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      lawyers: {
+        Row: {
+          city: string
+          created_at: string | null
+          email: string | null
+          firm: string
+          id: string
+          languages: string[]
+          latitude: number | null
+          longitude: number | null
+          name: string
+          phone: string
+          pro_bono: boolean | null
+          specialties: string[]
+          state: string
+          verified: boolean | null
+          zip: string
+        }
+        Insert: {
+          city: string
+          created_at?: string | null
+          email?: string | null
+          firm: string
+          id?: string
+          languages: string[]
+          latitude?: number | null
+          longitude?: number | null
+          name: string
+          phone: string
+          pro_bono?: boolean | null
+          specialties: string[]
+          state: string
+          verified?: boolean | null
+          zip: string
+        }
+        Update: {
+          city?: string
+          created_at?: string | null
+          email?: string | null
+          firm?: string
+          id?: string
+          languages?: string[]
+          latitude?: number | null
+          longitude?: number | null
+          name?: string
+          phone?: string
+          pro_bono?: boolean | null
+          specialties?: string[]
+          state?: string
+          verified?: boolean | null
+          zip?: string
+        }
+        Relationships: []
+      }
+      stop_reports: {
+        Row: {
+          county: string
+          created_at: string | null
+          description: string | null
+          id: string
+          lat: number
+          lon: number
+          proof_url: string | null
+          report_type: string
+          reviewed: boolean | null
+          state: string
+          user_id: string | null
+        }
+        Insert: {
+          county: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          lat: number
+          lon: number
+          proof_url?: string | null
+          report_type: string
+          reviewed?: boolean | null
+          state: string
+          user_id?: string | null
+        }
+        Update: {
+          county?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          lat?: number
+          lon?: number
+          proof_url?: string | null
+          report_type?: string
+          reviewed?: boolean | null
+          state?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _user_id: string
+          _role: Database["public"]["Enums"]["app_role"]
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -133,6 +252,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "user"],
+    },
   },
 } as const
